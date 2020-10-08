@@ -11,7 +11,9 @@ GO_TEST_DIRS := $(shell \
 GO_PACKAGE_NAME := $(shell \
 	git config remote.origin.url | sed -E 's~https://(\.)?([^:]+).git~\2~' \
 	)
-
+GO_BRANCH_NAME := $(shell \
+	git branch --show-current \
+	)
 
 # Shows the variables we just set.
 # By prepending `@` we prevent Make
@@ -42,10 +44,10 @@ fmt: $(GO_SRC_DIRS)
 	done;
 
 
-build: module_init
+build: 
 	go build -o bin/main main.go
 
-run: module_init
+run: 
 	go run main.go
 
 
@@ -64,6 +66,8 @@ clean:
 	rm go.mod
 
 
-module_init: 
-	echo "initialization of the local go module"
+init: clean
+	echo "initialization of the local go module with pakage name"
+	wget https://github.com/marcocipri/RESTful-interfaces/blob/$(GO_BRANCH_NAME)/examples/helloworld.yml
+	echo "initialization of the local go module with pakage name"
 	go mod init $(GO_PACKAGE_NAME) 
