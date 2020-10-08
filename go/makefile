@@ -11,6 +11,16 @@ GO_TEST_DIRS := $(shell \
 GO_PACKAGE_NAME := $(shell \
 	git config remote.origin.url | sed -E 's~https://(\.)?([^:]+).git~\2~' \
 	)
+
+
+GO_GIT_USER_ID := $(shell \
+	git config remote.origin.url | sed -E 's~https://(\.)?([^:]+)/([^:]+)/([^:]+).git~\3~' \
+	)
+
+GO_GIT_REPO_ID := $(shell \
+	git config remote.origin.url | sed -E 's~https://(\.)?([^:]+)/([^:]+)/([^:]+).git~\4~' \
+	)
+
 GO_BRANCH_NAME := $(shell \
 	git branch --show-current \
 	)
@@ -63,11 +73,21 @@ test:
 all:  build
 
 clean:
-	rm go.mod
+	rm go.mod || true
+	rm -rf servermock || true
+	rm -rf openApi || true
+	rm -rf servermock || true
 
 
-init: clean
+init: 
 	echo "initialization of the local go module with pakage name"
-	wget https://github.com/marcocipri/RESTful-interfaces/blob/$(GO_BRANCH_NAME)/examples/helloworld.yml
+	mkdir openApi
+	wget https://raw.github.com/marcocipri/RESTful-interfaces/$(GO_BRANCH_NAME)/examples/helloworld.yml -O openApi/helloworld.yml
+	echo "mock code generation"
+	docker run --rm \
+  	-v ${PWD}:/local openapitools/openapi-generator-cli generate \
+  	-i /local/openApi/helloworld.yml \
+  	-g go-server \
+  	-o /local/servermock --git-user-id ${GO_GIT_USER_ID} --git-repo-id ${GO_GIT_REPO_ID}
 	echo "initialization of the local go module with pakage name"
 	go mod init $(GO_PACKAGE_NAME) 
