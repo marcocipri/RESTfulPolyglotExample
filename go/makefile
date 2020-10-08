@@ -25,6 +25,10 @@ GO_BRANCH_NAME := $(shell \
 	git branch --show-current \
 	)
 
+GO_PATH := $(shell \
+	go env GOPATH \
+	)
+
 # Shows the variables we just set.
 # By prepending `@` we prevent Make
 # from printing the command before the
@@ -89,5 +93,6 @@ init:
   	-i /local/openApi/helloworld.yml \
   	-g go-server \
   	-o /local/servermock --git-user-id ${GO_GIT_USER_ID} --git-repo-id ${GO_GIT_REPO_ID}
+	${GO_PATH}/bin/goimports -w ./servermock/
 	echo "initialization of the local go module with pakage name"
 	go mod init $(GO_PACKAGE_NAME) 
