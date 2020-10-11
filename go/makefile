@@ -22,7 +22,7 @@ GO_GIT_REPO_ID := $(shell \
 	)
 
 GO_BRANCH_NAME := $(shell \
-	git branch --show-current \
+	git rev-parse --abbrev-ref HEAD \
 	)
 
 GO_PATH := $(shell \
@@ -78,21 +78,26 @@ all:  build
 
 clean:
 	rm go.mod || true
+	rm go.sum || true
 	rm -rf servermock || true
 	rm -rf openApi || true
-	rm -rf servermock || true
+	rm -rf generated || true
 
 
 init: 
 	echo "initialization of the local go module with pakage name"
 	mkdir openApi
-	wget https://raw.github.com/marcocipri/RESTful-interfaces/$(GO_BRANCH_NAME)/examples/helloworld.yml -O openApi/helloworld.yml
+	wget https://raw.github.com/marcocipri/RESTful-interfaces/$(GO_BRANCH_NAME)/examples/pets.yml -O openApi/pets.yml
 	echo "mock code generation"
 	docker run --rm \
   	-v ${PWD}:/local openapitools/openapi-generator-cli generate \
-  	-i /local/openApi/helloworld.yml \
+  	-i /local/openApi/pets.yml \
   	-g go-server \
-  	-o /local/servermock --git-user-id ${GO_GIT_USER_ID} --git-repo-id ${GO_GIT_REPO_ID}
-	${GO_PATH}/bin/goimports -w ./servermock/
+	--additional-properties isGoSubmodule=true  --additional-properties generateInterfaces=true \
+	--additional-properties sourceFolder=servermock \
+	--additional-properties packageName=RESTfulPolyglotEampleGoServer \
+  	-o /local/generated --git-user-id ${GO_GIT_USER_ID} --git-repo-id ${GO_GIT_REPO_ID} 
+	${GO_PATH}/bin/goimports -w ./generated/
+	mv generated/servermock servermock
 	echo "initialization of the local go module with pakage name"
-	go mod init $(GO_PACKAGE_NAME) 
+	go mod init $(GO_PACKAGE_NAME)/go 
